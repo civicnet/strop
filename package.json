@@ -1,0 +1,34 @@
+{
+  "name": "@civicnet/strop",
+  "version": "1.0.0",
+  "description": "Simple tagged template literals (strings)",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --coverage && node node_modules/coveralls/bin/coveralls.js < coverage/lcov.info"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/civicnet/strop.git"
+  },
+  "keywords": [
+    "indent",
+    "interpolate",
+    "multi-line",
+    "literal",
+    "string",
+    "tag",
+    "template"
+  ],
+  "author": "CivicNet",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/civicnet/strop/issues"
+  },
+  "homepage": "https://github.com/civicnet/strop#readme",
+  "devDependencies": {
+    "coveralls": "^3.1.0",
+    "eslint": "^7.0.0",
+    "eslint-plugin-jest": "^23.13.1",
+    "jest": "^26.0.1"
+  }
+}

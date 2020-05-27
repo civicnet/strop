@@ -1,0 +1,8 @@
+
+        Hi, ${name}!
+    
+    Do you like being a ${job}?
+    
+    Options:
+        ${options.map((o) => `* ${o}`).join('\n')}
+

@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`is unchanged 1`] = `"undefined null"`;
+
+exports[`is unchanged 2`] = `"false true"`;
+
+exports[`is unchanged 3`] = `"NaN 0 42 Infinity"`;
+
+exports[`is unchanged 4`] = `"   text"`;

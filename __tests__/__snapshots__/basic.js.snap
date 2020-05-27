@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`instance is unchanged 1`] = `
+Array [
+  "length",
+  "name",
+  "arguments",
+  "caller",
+  "prototype",
+  "indent",
+]
+`;
+
+exports[`is unchanged 1`] = `
+Array [
+  "length",
+  "prototype",
+  "name",
+]
+`;
