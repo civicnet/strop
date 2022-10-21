@@ -7,7 +7,7 @@ it('exists', () => {
 });
 
 it('is unchanged', () => {
-    expect(Object.getOwnPropertyNames(StrOP)).toMatchSnapshot();
+    expect(Object.getOwnPropertyNames(StrOP).sort()).toMatchSnapshot();
 });
 
 describe('instance', () => {
@@ -32,7 +32,7 @@ describe('instance', () => {
     });
 
     it('is unchanged', () => {
-        expect(Object.getOwnPropertyNames(new StrOP('Basic'))).toMatchSnapshot();
+        expect(Object.getOwnPropertyNames(new StrOP('Basic')).sort()).toMatchSnapshot();
     });
 
     it('tags strings', () => {
