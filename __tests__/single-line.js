@@ -12,7 +12,7 @@ it('does not trim', () => {
     expect(`${str` `}`).toEqual(' ');
 });
 
-it('keeps raw text', () => {
+it('preserves raw text', () => {
     expect(`${str`\t`}`).toEqual('\\t');
 });
 
@@ -20,7 +20,7 @@ it('interpolates', () => {
     expect(`${str`${42}`}`).toEqual('42');
 });
 
-it('keeps padding', () => {
+it('preserves padding', () => {
     expect(`${str` before ${'&'} after `}`).toEqual(' before & after ');
 });
 

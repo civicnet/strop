@@ -27,7 +27,7 @@ it('interpolates', () => {
     `}`).toEqual('text\n42');
 });
 
-it('keeps relative indentation', () => {
+it('preserves relative indentation', () => {
     expect(`${str`
         text
             ${42}
