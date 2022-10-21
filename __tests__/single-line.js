@@ -24,10 +24,6 @@ it('keeps padding', () => {
     expect(`${str` before ${'&'} after `}`).toEqual(' before & after ');
 });
 
-it('keeps padding', () => {
-    expect(`${str` before ${'&'} after `}`).toEqual(' before & after ');
-});
-
 it('is unchanged', () => {
     expect(`${str`${undefined} ${null}`}`).toMatchSnapshot();
     expect(`${str`${false} ${true}`}`).toMatchSnapshot();
