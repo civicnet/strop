@@ -224,14 +224,14 @@ Custom implementations should (but are not required to) call the default impleme
 
 This method is the actual tag function; it is called internally to prepare the result of a tag operation, after indendation is removed from the `raw` strings, and with the original `values`. It is used both for template literals and the default [**`file`** method][file]'s returned functions.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L89-L117) returns an array-like object which wraps the parameters;  when converted to a string, it calls the [**`render`** method][render] for for every interpolated value. Proper indentation will be added to the rendered results if they span multiple lines.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L89-L117) returns an array-like object which wraps the parameters;  when converted to a string, it calls the [**`render`** method][render] for every interpolated value. Proper indentation will be added to the rendered results if they span multiple lines.
 
 Custom implementations could be used to:
 * emplace [DSLs](https://en.wikipedia.org/wiki/Domain-specific_language);
 * make external calls;
 * alter the returned value.
 
-**Note:** The returned value is further processed internally to ensure it is an instance of the tag; this _does not work_ for primitives and "breaks" most typed objects.
+**Note:** The returned value is further processed internally to ensure it is an instance of the tag; this _does not work_ for primitives and "breaks" most typed objects. Additionally, the returned value is frozen.
 
 If built-in `Boolean`, `Date`, `Number` or `String` objects are returned, the default [**`unwrap`** method][unwrap] will (correctly) convert them to primitives.
 
