@@ -49,4 +49,10 @@ describe('instance', () => {
         expect(() => { test.indent = ''; }).toThrowError(TypeError);
         expect(() => { delete test.indent; }).toThrowError(TypeError);
     });
+
+    it('freezes results', () => {
+        const test = new StrOP('Basic');
+
+        expect(Object.isFrozen(test`Some string`)).toBeTruthy();
+    });
 });
