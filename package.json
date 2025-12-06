@@ -1,6 +1,6 @@
 {
     "name": "@civicnet/strop",
-    "version": "1.1.0-wip",
+    "version": "1.1.0",
     "description": "Simple tagged template literals (strings)",
     "main": "index.js",
     "scripts": {
