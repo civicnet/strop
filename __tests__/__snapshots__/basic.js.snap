@@ -1,18 +1,18 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`instance is unchanged 1`] = `
+exports[`is unchanged 1`] = `
 [
-  "arguments",
-  "caller",
-  "indent",
   "length",
   "name",
   "prototype",
 ]
 `;
 
-exports[`is unchanged 1`] = `
+exports[`tag is unchanged 1`] = `
 [
+  "arguments",
+  "caller",
+  "indent",
   "length",
   "name",
   "prototype",

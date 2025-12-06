@@ -1,10 +1,10 @@
-'use strict'
+'use strict';
 
 const $Rule = Symbol('Rule');
 const $Type = Symbol('Type');
 
 function transform(strings, ...values) {
-    let result = this.pass({ raw: this.unindent(...strings.raw) }, ...values);
+    const result = this.pass({ raw: this.unindent(...strings.raw) }, ...values);
 
     if (result instanceof Object) {
         Object.setPrototypeOf(result, this.prototype);
@@ -15,71 +15,72 @@ function transform(strings, ...values) {
 
 class StrOP extends Function {
     // https://github.com/civicnet/strop#constructing-tags
-    constructor (name) {
-        if ('undefined' == typeof name) {
+    constructor(name) {
+        if (typeof name == 'undefined') {
             throw new TypeError('StrOP instances require a name');
         }
 
         super();
 
         Object.defineProperties(this, {
-            [$Rule] : { value: new Map() },
-            [$Type] : { value: new WeakMap() },
+            [$Rule] : { value: new Map },
+            [$Type] : { value: new WeakMap },
 
-            name    : { value: `${name}` }
+            name : { value: `${ name }` },
         });
 
         let indent = '\t ';
-        
-        Object.defineProperty(this, 'indent', {
-            get: () => indent,
 
-            set: (value) => {
-                if ('string' != typeof value || !value.length) {
+        Object.defineProperty(this, 'indent', {
+            get : () => indent,
+
+            set(value) {
+                if (typeof value != 'string' || !value.length) {
                     throw new TypeError('indent must be a non-empty string');
                 }
 
                 indent = value;
-            }
+            },
         });
 
         Object.defineProperty(this.prototype, Symbol.toPrimitive, {
-            writable        : true,
-            configurable    : true,
+            configurable : true,
+            writable     : true,
 
-            value: function (hint) {
+            value(hint) {
                 return this.constructor.unwrap(this, hint);
-            }
+            },
         });
 
         Object.defineProperty(this.prototype, 'toString', {
-            writable        : true,
-            configurable    : true,
+            configurable : true,
+            writable     : true,
 
-            value: function () {
-                return `${this[Symbol.toPrimitive]('string')}`;
-            }
+            value() {
+                return `${ this[Symbol.toPrimitive]('string') }`;
+            },
         });
 
         const tag = new Proxy(this, {
-            apply       : (_, $, args) => Reflect.apply(transform, this, args),
-            construct   : () => { throw new TypeError(`${name} is not a constructor`); }
+            apply : (_, $, args) => Reflect.apply(transform, this, args),
+
+            construct() { throw new TypeError(`${ name } is not a constructor`) },
         });
 
-        return tag;
+        return tag; // eslint-disable-line no-constructor-return
     }
 
     // https://github.com/civicnet/strop#filepath
     file(path) {
-        if ('undefined' == typeof path) {
+        if (typeof path == 'undefined') {
             throw new TypeError('A file path must be specified');
         }
 
         const raw = require('fs').readFileSync(path, 'utf8');
 
         const body = [
-            `const values = Object.assign({}, ...Array.prototype.slice.call(arguments).reverse());`,
-            `with (values) { return this\`${raw}\`; }`
+            'const values = Object.assign({}, ...Array.prototype.slice.call(arguments).reverse());',
+            `with (values) { return this\`${ raw }\`; }`,
         ].join('\n');
 
         return new Function(body).bind(this);
@@ -87,30 +88,30 @@ class StrOP extends Function {
 
     // https://github.com/civicnet/strop#pass-raw--values
     pass({ raw }, ...values) {
-        const indent = new RegExp(`^([${this.indent}]*)`);
+        const indent = new RegExp(`^([${ this.indent }]*)`);
 
         values = values.map((v, i) => {
             const current = indent.exec(raw.slice(0, i + 1).join('').split('\n').pop())[1];
 
-            const placeholder =  Object.defineProperty(Object.create(null), Symbol.toPrimitive, {
-                value: () => `${this.render(v)}`.replace(/\n/g, `\n${current}`)
+            const placeholder = Object.defineProperty(Object.create(null), Symbol.toPrimitive, {
+                value : () => `${ this.render(v) }`.replace(/\n/g, `\n${ current }`),
             });
 
             return Object.freeze(placeholder);
         });
 
         const result = [ Object.freeze({ raw: Object.freeze(raw) }), ...values ];
-        
+
         Object.defineProperty(result, Symbol.iterator, {
-            value: function * () {
+            * value() {
                 yield * Array.prototype.slice.call(this);
-            }
+            },
         });
 
         Object.defineProperty(result, Symbol.toPrimitive, {
-            value: function () {
+            value() {
                 return String.raw(...this);
-            }
+            },
         });
 
         return result;
@@ -121,7 +122,7 @@ class StrOP extends Function {
         let result = value;
 
         if (value instanceof Object) {
-            let custom;
+            let custom = null;
 
             for (let type = Object.getPrototypeOf(value); type && !custom; type = Object.getPrototypeOf(type)) {
                 custom = this[$Type].get(type.constructor);
@@ -135,60 +136,64 @@ class StrOP extends Function {
             result = this[$Rule].get(value);
         }
 
-        return `${result}`;
+        return `${ result }`;
     }
 
     // https://github.com/civicnet/strop#rulevalue-as
     rule(value, as) {
         switch (typeof value) {
             case 'object':
-                if (null === value) {
+                if (value === null) {
                     break;
                 }
 
             // eslint-disable-next-line no-fallthrough
             case 'function':
-                throw new TypeError(`${value} is not a primitive type`);
+                throw new TypeError(`${ value } is not a primitive type`);
         }
 
-        if ('undefined' == typeof as) {
+        if (typeof as == 'undefined') {
             throw new TypeError('Rules require two parameters');
         }
 
-        this[$Rule].set(value, `${as}`);
+        this[$Rule].set(value, `${ as }`);
     }
 
     // https://github.com/civicnet/strop#typefactory-handler
     type(factory, handler) {
-        if ('function' != typeof factory) {
-            throw new TypeError(`${factory} is not a function`);
+        if (typeof factory != 'function') {
+            throw new TypeError(`${ factory } is not a function`);
         }
 
-        if ('function' != typeof handler) {
-            throw new TypeError(`${handler} is not a function`);
+        if (typeof handler != 'function') {
+            throw new TypeError(`${ handler } is not a function`);
         }
 
         this[$Type].set(factory, handler);
     }
-    
+
     // https://github.com/civicnet/strop#unindentstrings
     unindent(...strings) {
         if (!strings.length) {
             return strings;
         }
 
-        strings = strings.map((s) => `${s}`);
+        strings = strings.map((s) => `${ s }`);
 
-        strings[0] = strings[0].replace(new RegExp(`^([${this.indent}]*\n)+`), '\n');
-        strings[strings.length - 1] = strings[strings.length - 1].replace(new RegExp(`(\n[${this.indent}]*)+$`), '\n');
-        
-        let flat = strings.reduce((_, string) => _.concat(null, ...string.split('\n')), []);
+        strings[0] = strings[0].replace(new RegExp(`^([${ this.indent }]*\n)+`), '\n');
+
+        strings[strings.length - 1] = strings[strings.length - 1].replace(
+            new RegExp(`(\n[${ this.indent }]*)+$`),
+            '\n',
+        );
+
+        const flat = strings.reduce((_, string) => _.concat(null, ...string.split('\n')), []);
 
         let indent = [];
 
         for (let same = true, current = []; same; current = []) {
             for (let i = 1; i < flat.length; ++i) {
-                if (null === flat[i] || null === flat[i - 1] || !flat[i].length) {
+                if (flat[i] === null || flat[i - 1] === null || !flat[i].length) {
                     continue;
                 }
 
@@ -203,17 +208,21 @@ class StrOP extends Function {
                 break;
             }
 
-            same = same && !!current.length && current.every((c) => (c === current[0])) && indent.push(current[0]) && true;
+            same &&= !!current.length && current.every((c) => (c === current[0]));
+
+            if (same) {
+                indent.push(current[0]);
+            }
         }
 
-        indent = new RegExp(`^${indent.join('')}(.*)$`);
+        indent = new RegExp(`^${ indent.join('') }(.*)$`);
 
         flat.push(null);
 
         let result = [];
 
         for (let i = 0, current = []; i < flat.length; ++i) {
-            if (null === flat[i]) {
+            if (flat[i] === null) {
                 if (i) {
                     result.push(current);
                     current = [];
@@ -222,7 +231,7 @@ class StrOP extends Function {
                 continue;
             }
 
-            if (null === flat[i - 1]) {
+            if (flat[i - 1] === null) {
                 current.push(flat[i]);
 
                 continue;
@@ -242,12 +251,13 @@ class StrOP extends Function {
     // https://github.com/civicnet/strop#unwrapvalue-hint--default
     unwrap(value, hint = 'default') {
         const known = {
+            isDate(h) { return new Date(this)[Symbol.toPrimitive](h) },
+
             isBooleanObject : Boolean.prototype.valueOf,
-            isDate          : function (h) { return new Date(this)[Symbol.toPrimitive](h); },
             isNumberObject  : Number.prototype.valueOf,
-            isStringObject  : String.prototype.valueOf
+            isStringObject  : String.prototype.valueOf,
         };
-        
+
         for (const [ test, cast ] of Object.entries(known)) {
             if (require('util').types[test](value)) {
                 return cast.call(value, hint);
@@ -255,7 +265,7 @@ class StrOP extends Function {
         }
 
         if (value instanceof Object) {
-            return `${value}`;
+            return `${ value }`;
         }
 
         return value;

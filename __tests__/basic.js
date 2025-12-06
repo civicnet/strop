@@ -1,6 +1,7 @@
-'use strict'
+'use strict';
 
 const StrOP = require('..');
+
 
 it('exists', () => {
     expect(StrOP).toBeInstanceOf(Function);
@@ -10,9 +11,10 @@ it('is unchanged', () => {
     expect(Object.getOwnPropertyNames(StrOP).sort()).toMatchSnapshot();
 });
 
-describe('instance', () => {
+
+describe('tag', () => {
     it('requires a name', () => {
-        expect(() => new StrOP).toThrowError(TypeError);
+        expect(() => new StrOP).toThrow(TypeError);
     });
 
     it('constructs', () => {
@@ -28,7 +30,7 @@ describe('instance', () => {
     });
 
     it('is not a constructor', () => {
-        expect(() => new (new StrOP('Basic'))).toThrowError(TypeError);
+        expect(() => new (new StrOP('Basic'))).toThrow(TypeError);
     });
 
     it('is unchanged', () => {
@@ -36,23 +38,57 @@ describe('instance', () => {
     });
 
     it('tags strings', () => {
-        const test = new StrOP('Basic');
+        const tag = new StrOP('Basic');
 
-        expect(test`Some string`).toBeDefined();
+        expect(tag`Some string`).toBeDefined();
     });
 
     it('expects valid indentation characters', () => {
-        const test = new StrOP('Basic');
+        const tag = new StrOP('Basic');
 
-        expect(() => { test.indent = null; }).toThrowError(TypeError);
-        expect(() => { test.indent = 7; }).toThrowError(TypeError);
-        expect(() => { test.indent = ''; }).toThrowError(TypeError);
-        expect(() => { delete test.indent; }).toThrowError(TypeError);
+        expect(() => {
+            tag.indent = null;
+        }).toThrow(TypeError);
+
+        expect(() => {
+            tag.indent = 7;
+        }).toThrow(TypeError);
+
+        expect(() => {
+            tag.indent = '';
+        }).toThrow(TypeError);
+
+        expect(() => {
+            delete tag.indent;
+        }).toThrow(TypeError);
+    });
+});
+
+
+describe('result', () => {
+    it('is array-like', () => {
+        const tag = new StrOP('Basic');
+
+        expect(Array.isArray(tag`anything`)).toBeTruthy();
     });
 
-    it('freezes results', () => {
-        const test = new StrOP('Basic');
+    it('has a length property', () => {
+        const tag = new StrOP('Basic');
 
-        expect(Object.isFrozen(test`Some string`)).toBeTruthy();
+        expect(tag`anything`.length).toBeDefined();
+    });
+
+    it('is frozen', () => {
+        const tag = new StrOP('Basic');
+
+        expect(Object.isFrozen(tag`anything`)).toBeTruthy();
+    });
+
+    it('can not be modified', () => {
+        const tag = new StrOP('Bugs');
+
+        expect(() => {
+            Array.prototype.push.call(tag`anything`, 'more');
+        }).toThrow(TypeError);
     });
 });
