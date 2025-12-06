@@ -78,19 +78,19 @@ A tag's default behaviour:
 * **interpolates placeholders** exactly like _untagged_ template literals and indents them accordingly;
 * **produces an object** which can be converted to a string.
 
-If the first line is not empty and doesn't contain only indentation characters, it will not have its indentation removed, nor will it be taken into account when computing the common indentation.
+Single-line templates do not have their indentation adjusted.
 
-Single-line templates do not have their indentation changed.
+Multi-line templates preserve the first line if is not empty and doesn't contain only indentation characters; it is also not taken into account when computing the common indentation.
 
 
 ### Constructing tags
 
-A single argument is passed to the [constructor](https://github.com/civicnet/strop/blob/master/index.js#L18-L71): the tag's `name`. It won't influence functionality, but can be useful for debugging.
+A single argument is passed to the [constructor](https://github.com/civicnet/strop/blob/master/index.js#L18-L71): a `name` for the tag. It won't influence functionality but can be useful for debugging.
 
 
 ### Tag results
 
-By default, a tag produces an object which contains all the information needed to be _lazily_ converted to a string. This can be done in several ways:
+By default, a tag produces an object which can be _lazily_ converted to a string:
 
 ```javascript
 console.log(`${ greeting }`);
@@ -100,8 +100,7 @@ console.log(String.raw(...greeting));
 
 While the default implementation aims to prevent later modifications of the tag result, it is possible for the original interpolated values to change before the result is converted or between separate invocations. [Custom implementations][Customizing tags] can prevent, restrict and/or handle these situations if needed.
 
-
-The result object is also an instance of the tag:
+The result is also an instance of the tag:
 
 ```javascript
 console.log(greeting instanceof sample); // true
@@ -118,25 +117,23 @@ let greet = sample.file('./examples/greeting.in');
 console.log(`${ greet(person) }`);
 ```
 
-The file must contain a bare template, i.e. without the opening and closing `` ` ``;
-
-An error will be thrown if the file is not found or can't be parsed.
+The file must contain a bare template, i.e. without the opening and closing `` ` ``. An error will be thrown if the file is not found or can't be parsed.
 
 **Security note: Do not load untrusted templates.**
 
-Loading a file returns a function which should be called with object arguments to provide context, i.e. the template will search their properties for any referenced values. The arguments are searched in the order they are passed; an error will be thrown if a required value is not found.
+Loading a file returns a function which should be called with object arguments; the template will search their properties for any referenced values. The arguments are searched in the order they are passed. An error will be thrown if a required value is not found as a property in any of the arguments.
 
 
 ## Customizing tags
 
-The removable [indentation characters] can be changed, interpolation can be customized using [rules and types], and the overall behaviour can be altered by overriding tags' [methods].
+The adjustable [indentation characters] can be changed, interpolation can be customized using [rules and types], and the overall behaviour can be altered by overriding tags' [methods].
 
 
 ### Indentation characters
 
-The indentation characters that a tag may remove are located in its `indent` property string; the default value of `'\t '` enables tags to remove tabs and spaces.
+The indentation characters that a tag may adjust are located in its `indent` property string; the default value of `'\t '` enables tags to remove tabs and spaces.
 
-An example:
+The property can be changed:
 
 ```javascript
 const custom = new StrOP('Custom indentation');
@@ -151,7 +148,7 @@ let todo = custom` TODO:
 console.log(`${ todo }`);
 ```
 
-Its output:
+The output:
 
 ```
  TODO:
@@ -161,7 +158,7 @@ Test code
 
 _Reminder: the first line will not have its indentation adjusted if it is not empty and doesn't contain only indentation characters._
 
-If a mix of different indentation characters is used in the template, only _identical_ sequences at the beginning of _every_ eligible line are considered "common" (and removed).
+If a mix of different indentation characters is used, only _identical_ sequences at the beginning of _every_ eligible line are considered "common" (and adjusted).
 
 
 ### Rules and types
@@ -195,36 +192,36 @@ console.log(`${ score }`); // Your score is: 93.33%
 
 Type handlers are called with `this` set to the calling tag and the value as an argument.
 
-Every interpolated value's prototype (inheritance) chain is searched; only the most specialized type's handler will be called.
+Every interpolated value's prototype (inheritance) chain is searched; only the most specialized type's handler is called.
 
 Rules and types take precedence over the interpolated values' string conversion methods.
 
 
 ### Methods
 
-A tag's behaviour can be customized by overriding its methods.
+A tag's behaviour can be further customized by overriding its methods.
 
 
 #### file(path)
 
 This method is not called internally.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L74-L87) loads the template file indicated by `path` and returns a function which can be called with objects, the keys of which are searched (in the order they are passed) during interpolation.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L74-L87) loads the template file indicated by `path` and returns a function which can be called with objects, the keys of which are searched in the order they are passed during interpolation.
 
 Custom implementations could be used to:
 * locate template files;
 * provide default values;
 * validate and/or sanitize the arguments;
-* alter invocation details.
-
-The result of the (final) function call _should not_ be altered, as it is assumed to be identical to tagging template literals. Both can be customized by overriding the [**`pass`** method][pass] instead.
+* change the invocation interface (e.g. argument order, currying).
 
 Custom implementations should (but are not required to) call the default implementation.
+
+The result of the (final) function call _should not_ be altered, as it is assumed to be identical to tagging template literals. If necessary, this can be achieved by overriding the [**`pass`** method][pass].
 
 
 #### pass({ raw }, ...values)
 
-This method is the actual tag function; it is called internally to prepare the result of a tag operation, after indendation is removed from the `raw` strings, and with the original `values`. It is used both for template literals and the default [**`file`** method][file]'s returned functions.
+This method is called to prepare the result of a tag operation, after indendation is removed from the `raw` strings by the [**`unindent`** method][unindent], and with the original `values`. It is used by template literals and the default [**`file`** method][file]'s returned functions.
 
 The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L90-L118) returns an array-like object which wraps the parameters; when converted to a string, it calls the [**`render`** method][render] for every interpolated value. Indentation will be adjusted for the rendered results that span multiple lines.
 
@@ -233,33 +230,35 @@ Custom implementations could be used to:
 * perform additional processing (e.g. translation, [DSLs](https://en.wikipedia.org/wiki/Domain-specific_language));
 * alter the result.
 
-The result is always processed to ensure it is an instance of the tag; this may break typed objects and does not work for primitives. Lastly, the result is [frozen](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze).
-
-If built-in `Boolean`, `Date`, `Number` or `String` objects are returned, the default [**`unwrap`** method][unwrap] will (correctly) convert them to primitives.
-
 Custom implementations should (but are not required to) call the default implementation.
+
+If the returned value is an object, it is further processed internally to ensure it is an instance of the tag and [frozen](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze); this may break typed objects.
+
+If built-in `Boolean`, `Date`, `Number` or `String` objects are returned, the default [**`unwrap`** method][unwrap] will be called when they are converted to strings to produce a correct representation.
 
 
 #### render(value)
 
 This method is used by objects returned by the default [**`pass`** method][pass] when they are converted to strings; it is called to produce a string representation for every interpolated `value`.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L121-L140) searches [rules and types] for substitution and converts the value (or substitute) to a string.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L121-L140) searches [rules and types] for substitution and converts the final result to a string.
 
 Custom implementations could be used to:
-* freeze the value;
+* freeze the input value;
 * change the substitution logic;
 * quote, decorate and/or escape the result;
 * cache conversion result.
 
 Custom implementations must call the original implementation to apply rules and types, as there are no other means to achieve this.
 
+The returned value is always converted to a string by objects returned by the default [**`pass`** method][pass] when they are converted to strings.
+
 
 #### rule(value, as)
 
 This method is not called internally.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L143-L160) instructs the tag to replace every interpolated `value` with `as`.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L143-L160) enables the default [**`render`** method][render] to replace every interpolated `value` with `as`.
 
 There are no discernible use cases that would require overriding this method.
 
@@ -270,9 +269,9 @@ Custom implementations must call the original implementation to register effecti
 
 This method is not called internally.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L163-L173) instructs the tag to replace every interpolated value that is an instace of the `factory` function by calling the `handler` function with `this` set to the calling tag and the value as an argument.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L163-L173) enables the default [**`render`** method][render] to replace every interpolated value that is an instance of the `factory` function by calling the `handler` function with `this` set to the calling tag and the value as an argument.
 
-Every interpolated value's entire prototype (inheritance) chain is searched; if the value matches multiple types, only the most specialized one's handler will be called.
+Every interpolated value's entire prototype (inheritance) chain is searched; if the value matches multiple registered types, only the most specialized one's handler will be called.
 
 There are no discernible use cases that would require overriding this method.
 
@@ -281,7 +280,7 @@ Custom implementations must call the original implementation to register effecti
 
 #### unindent(...strings)
 
-This method is called during interpolation with the template's raw `strings` to remove [indentation characters].
+This method is called during interpolation with the template's raw `strings`; the returned value is provided to the [**`pass`** method][pass].
 
 The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L176-L249) trims leading and/or trailing lines that are empty (or contain only indentation characters) and removes any common indentation from all remaining non-empty lines.
 
@@ -289,13 +288,15 @@ Templates that span a single line before trimming do not have their indentation 
 
 If the first line is not empty (and doesn't contain only indentation characters) before trimming, it will not have its indentation adjusted, nor will it be taken into account when computing the common indentation.
 
-Any _completely empty_ lines that remain after trimming (i.e. were not at the very beginning or end of the template) are preserved and ignored when computing the common indentation. The assumption is that text editors will either preserve indentation in otherwise empty lines, or that they will completely empty them; however, some editors will not change template literals automatically and may leave uneven indentation in visually empty lines. This should be checked for whenever the output is different than expected.
+Any _completely empty_ lines that remain after trimming (i.e. were not at the very beginning or end of the template) are preserved and ignored when computing the common indentation. The assumption is that text editors will either preserve indentation in otherwise empty lines, or that they will completely empty them; however, some editors will not change template literals automatically and may leave uneven indentation in visually empty lines.
+
+If a mix of different indentation characters is used, only _identical_ sequences at the beginning of _every_ eligible line are counted as common indentation (and adjusted).
 
 Custom implementations could be used to:
 * disable or change indentation processing;
 * restrict certain usage patterns.
 
-Custom implementations should (but are not required to) call the default implementation and must **always** return an array with the same length as `strings`.
+Custom implementations should (but are not required to) call the default implementation; they must **always** return an array with the same length as `strings`.
 
 
 #### unwrap(value, hint = 'default')
@@ -310,7 +311,7 @@ Custom implementations could be used to:
 * alter the way built-in objects are converted;
 * convert additional types of objects.
 
-Custom implementations should (but are not required to) call the default implementation.
+Custom implementations should (but are not required to) call the default implementation; they must **always** return a primitive value.
 
 
 ## Tests
