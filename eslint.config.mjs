@@ -226,6 +226,7 @@ export default defineConfig([
             ],
 
             '@stylistic/keyword-spacing' : 'warn',
+            '@stylistic/linebreak-style' : [ 'error', 'unix' ],
 
             '@stylistic/lines-between-class-members' : [
                 'warn',
