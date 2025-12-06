@@ -1,4 +1,4 @@
-# StrOP &nbsp;&nbsp;&nbsp;![npm](https://img.shields.io/npm/v/@civicnet/strop.svg) [![Build](https://travis-ci.org/civicnet/strop.svg?branch=master)](https://travis-ci.org/civicnet/strop) [![Coverage](https://coveralls.io/repos/github/civicnet/strop/badge.svg)](https://coveralls.io/github/civicnet/strop)
+# StrOP &nbsp;&nbsp;&nbsp;![npm](https://img.shields.io/npm/v/@civicnet/strop.svg) ![Test Status](https://github.com/civicnet/strop/actions/workflows/test.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/civicnet/strop/badge.svg?branch=master)](https://coveralls.io/github/civicnet/strop?branch=master)
 
 Simple tagged template literals (strings)
 
