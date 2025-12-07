@@ -15,11 +15,10 @@ Simple tagged template literals (strings)
   * [Methods]
     * [file(path)][file]
     * [pass({ raw }, ...values)][pass]
-    * [render(value)][render]
+    * [resolve(value)][resolve]
     * [rule(value, as)][rule]
     * [type(factory, handler)][type]
     * [unindent(...strings)][unindent]
-    * [unwrap(value, hint = 'default')][unwrap]
 * [Tests]
 * [License]
 
@@ -85,7 +84,7 @@ Multi-line templates preserve the first line if is not empty and doesn't contain
 
 ### Constructing tags
 
-A single argument is passed to the [constructor](https://github.com/civicnet/strop/blob/master/index.js#L18-L71): a `name` for the tag. It won't influence functionality but can be useful for debugging.
+A single argument is passed to the [constructor](https://github.com/civicnet/strop/blob/master/index.js#L10-L51): a `name` for the tag. It won't influence functionality but can be useful for debugging.
 
 
 ### Tag results
@@ -206,7 +205,7 @@ A tag's behaviour can be further customized by overriding its methods.
 
 This method is not called internally.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L74-L87) loads the template file indicated by `path` and returns a function which can be called with objects, the keys of which are searched in the order they are passed during interpolation.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L54-L67) loads the template file indicated by `path` and returns a function which can be called with objects, the keys of which are searched in the order they are passed during interpolation.
 
 Custom implementations could be used to:
 * locate template files;
@@ -223,7 +222,7 @@ The result of the (final) function call _should not_ be altered, as it is assume
 
 This method is called to prepare the result of a tag operation, after indendation is removed from the `raw` strings by the [**`unindent`** method][unindent], and with the original `values`. It is used by template literals and the default [**`file`** method][file]'s returned functions.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L90-L118) returns an array-like object which wraps the parameters; when converted to a string, it calls the [**`render`** method][render] for every interpolated value. Indentation will be adjusted for the rendered results that span multiple lines.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L70-L122) returns an object which wraps the parameters. The returned object is an instance of the tag and cannot be modified, but can be extended. When converted to a string, it calls the [**`resolve`** method][resolve] for every interpolated value and converts the results into strings; indentation is adjusted for the results that span multiple lines.
 
 Custom implementations could be used to:
 * freeze the arguments;
@@ -232,22 +231,18 @@ Custom implementations could be used to:
 
 Custom implementations should (but are not required to) call the default implementation.
 
-If the returned value is an object, it is further processed internally to ensure it is an instance of the tag and [frozen](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze); this may break typed objects.
 
-If built-in `Boolean`, `Date`, `Number` or `String` objects are returned, the default [**`unwrap`** method][unwrap] will be called when they are converted to strings to produce a correct representation.
+#### resolve(value)
 
+This method is invoked by objects returned by the default [**`pass`** method][pass] when they are converted to strings to process every interpolated `value`.
 
-#### render(value)
-
-This method is used by objects returned by the default [**`pass`** method][pass] when they are converted to strings; it is called to produce a string representation for every interpolated `value`.
-
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L121-L140) searches [rules and types] for substitution and converts the final result to a string.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L125-L144) searches [rules and types] for a potential substitution.
 
 Custom implementations could be used to:
 * freeze the input value;
 * change the substitution logic;
 * quote, decorate and/or escape the result;
-* cache conversion result.
+* cache the conversion result.
 
 Custom implementations must call the original implementation to apply rules and types, as there are no other means to achieve this.
 
@@ -258,7 +253,7 @@ The returned value is always converted to a string by objects returned by the de
 
 This method is not called internally.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L143-L160) enables the default [**`render`** method][render] to replace every interpolated `value` with `as`.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L147-L164) enables the default [**`resolve`** method][resolve] to replace every interpolated `value` with `as`.
 
 There are no discernible use cases that would require overriding this method.
 
@@ -269,7 +264,7 @@ Custom implementations must call the original implementation to register effecti
 
 This method is not called internally.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L163-L173) enables the default [**`render`** method][render] to replace every interpolated value that is an instance of the `factory` function by calling the `handler` function with `this` set to the calling tag and the value as an argument.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L167-L177) enables the default [**`resolve`** method][resolve] to replace every interpolated value that is an instance of the `factory` function by calling the `handler` function with `this` set to the calling tag and the value as an argument.
 
 Every interpolated value's entire prototype (inheritance) chain is searched; if the value matches multiple registered types, only the most specialized one's handler will be called.
 
@@ -282,7 +277,7 @@ Custom implementations must call the original implementation to register effecti
 
 This method is called during interpolation with the template's raw `strings`; the returned value is provided to the [**`pass`** method][pass].
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L176-L249) trims leading and/or trailing lines that are empty (or contain only indentation characters) and removes any common indentation from all remaining non-empty lines.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L180-L253) trims leading and/or trailing lines that are empty (or contain only indentation characters) and removes any common indentation from all remaining non-empty lines.
 
 Templates that span a single line before trimming do not have their indentation adjusted.
 
@@ -297,21 +292,6 @@ Custom implementations could be used to:
 * restrict certain usage patterns.
 
 Custom implementations should (but are not required to) call the default implementation; they must **always** return an array with the same length as `strings`.
-
-
-#### unwrap(value, hint = 'default')
-
-This method is only called when objects returned by a custom [**`pass`** method][pass] are converted to strings but they didn't provide their own [primitive conversion](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toPrimitive) method.
-
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L252-L272) checks if `value` is (or was) a built-in `Boolean`, `Date`, `Number` or `String` object and returns its correct primitive conversion; other objects are converted to strings directly.
-
-Primitives are always returned unchanged.
-
-Custom implementations could be used to:
-* alter the way built-in objects are converted;
-* convert additional types of objects.
-
-Custom implementations should (but are not required to) call the default implementation; they must **always** return a primitive value.
 
 
 ## Tests
@@ -342,10 +322,9 @@ npm test
 [Methods]: #methods
 [file]: #filepath
 [pass]: #pass-raw--values
-[render]: #rendervalue
+[resolve]: #resolvevalue
 [rule]: #rulevalue-as
 [type]: #typefactory-handler
 [unindent]: #unindentstrings
-[unwrap]: #unwrapvalue-hint--default
 [Tests]: #tests
 [License]: #license

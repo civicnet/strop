@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`is unchanged 1`] = `
+exports[`factory is unchanged 1`] = `
 [
   "length",
   "name",

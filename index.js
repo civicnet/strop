@@ -1,20 +1,9 @@
 'use strict';
 
 import { readFileSync } from 'node:fs';
-import types from 'node:util/types';
 
 const $Rule = Symbol('Rule');
 const $Type = Symbol('Type');
-
-function transform(strings, ...values) {
-    const result = this.pass({ raw: this.unindent(...strings.raw) }, ...values);
-
-    if (result instanceof Object) {
-        Object.setPrototypeOf(result, this.prototype);
-    }
-
-    return Object.freeze(result);
-}
 
 export default class StrOP extends Function {
     // https://github.com/civicnet/strop#constructing-tags
@@ -38,34 +27,22 @@ export default class StrOP extends Function {
             get : () => indent,
 
             set(value) {
-                if (typeof value != 'string' || !value.length) {
-                    throw new TypeError('indent must be a non-empty string');
+                if (typeof value != 'string') {
+                    throw new TypeError('indent must be a string');
                 }
 
                 indent = value;
             },
         });
 
-        Object.defineProperty(this.prototype, Symbol.toPrimitive, {
-            configurable : true,
-            writable     : true,
-
-            value(hint) {
-                return this.constructor.unwrap(this, hint);
-            },
-        });
-
-        Object.defineProperty(this.prototype, 'toString', {
-            configurable : true,
-            writable     : true,
-
-            value() {
-                return `${ this[Symbol.toPrimitive]('string') }`;
-            },
-        });
-
         const tag = new Proxy(this, {
-            apply : (_, $, args) => Reflect.apply(transform, this, args),
+            apply : (_, $, args) => Reflect.apply(
+                function transform(strings, ...values) {
+                    return this.pass({ raw: this.unindent(...strings.raw) }, ...values);
+                },
+                this,
+                args,
+            ),
 
             construct() { throw new TypeError(`${ name } is not a constructor`) },
         });
@@ -97,13 +74,25 @@ export default class StrOP extends Function {
             const current = indent.exec(raw.slice(0, i + 1).join('').split('\n').pop())[1];
 
             const placeholder = Object.defineProperty(Object.create(null), Symbol.toPrimitive, {
-                value : () => `${ this.render(v) }`.replace(/\n/g, `\n${ current }`),
+                value : () => `${ this.resolve(v) }`.replace(/\n/g, `\n${ current }`),
             });
 
             return Object.freeze(placeholder);
         });
 
-        const result = [ Object.freeze({ raw: Object.freeze(raw) }), ...values ];
+        let result = [ Object.freeze({ raw: Object.freeze(raw) }), ...values ];
+
+        for (let i = 0; i < result.length; ++i) {
+            const descriptor = Object.getOwnPropertyDescriptor(result, i);
+
+            Object.defineProperty(result, i, { ...descriptor, configurable: false, writable: false });
+        }
+
+        Object.defineProperty(result, 'toString', {
+            value() {
+                return `${ this[Symbol.toPrimitive]('string') }`;
+            },
+        });
 
         Object.defineProperty(result, Symbol.iterator, {
             * value() {
@@ -117,11 +106,23 @@ export default class StrOP extends Function {
             },
         });
 
+        result = new Proxy(result, {
+            getPrototypeOf : () => this.prototype,
+
+            set(target, property, value, receiver) {
+                if (property === 'length' || (/^\d+$/).test(property)) {
+                    return false;
+                }
+
+                return Reflect.set(target, property, value, receiver);
+            },
+        });
+
         return result;
     }
 
-    // https://github.com/civicnet/strop#rendervalue
-    render(value) {
+    // https://github.com/civicnet/strop#resolvevalue
+    resolve(value) {
         let result = value;
 
         if (value instanceof Object) {
@@ -139,7 +140,7 @@ export default class StrOP extends Function {
             result = this[$Rule].get(value);
         }
 
-        return `${ result }`;
+        return result;
     }
 
     // https://github.com/civicnet/strop#rulevalue-as
@@ -182,6 +183,13 @@ export default class StrOP extends Function {
         }
 
         strings = strings.map((s) => `${ s }`);
+
+        if (!this.indent.length) {
+            strings[0] = strings[0].replace(/^\n+/, '');
+            strings[strings.length - 1] = strings[strings.length - 1].replace(/\n+$/, '');
+
+            return strings;
+        }
 
         strings[0] = strings[0].replace(new RegExp(`^([${ this.indent }]*\n)+`), '\n');
 
@@ -249,28 +257,5 @@ export default class StrOP extends Function {
         result[result.length - 1] = result[result.length - 1].replace(/\n$/, '');
 
         return result;
-    }
-
-    // https://github.com/civicnet/strop#unwrapvalue-hint--default
-    unwrap(value, hint = 'default') {
-        const known = {
-            isDate(h) { return new Date(this)[Symbol.toPrimitive](h) },
-
-            isBooleanObject : Boolean.prototype.valueOf,
-            isNumberObject  : Number.prototype.valueOf,
-            isStringObject  : String.prototype.valueOf,
-        };
-
-        for (const [ test, cast ] of Object.entries(known)) {
-            if (types[test](value)) {
-                return cast.call(value, hint);
-            }
-        }
-
-        if (value instanceof Object) {
-            return `${ value }`;
-        }
-
-        return value;
     }
 }

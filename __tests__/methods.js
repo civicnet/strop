@@ -153,19 +153,6 @@ describe('pass', () => {
         expect(result).toEqual(42);
     });
 
-    it('has its result prototype changed', () => {
-        const tag = new StrOP('Methods');
-
-        class Result { }
-
-        tag.pass = () => new Result;
-
-        const result = tag`literally ${ 'anything' }`;
-
-        expect(result).toEqual(expect.any(tag));
-        expect(result).not.toEqual(expect.any(Result));
-    });
-
     it('has toString called on its result when stringifying', () => {
         const tag = new StrOP('Methods');
 
@@ -252,49 +239,11 @@ describe('type', () => {
     });
 });
 
-describe('render', () => {
+describe('resolve', () => {
     it('exists', () => {
         const tag = new StrOP('Methods');
 
-        expect(tag.render).toBeInstanceOf(Function);
-    });
-
-    it('works', () => {
-        const tag = new StrOP('Methods');
-
-        let u; // eslint-disable-line init-declarations, no-unassigned-vars
-
-        expect(tag.render()).toEqual(`${ u }`);
-
-        const values = [
-            undefined,
-            null,
-
-            false,
-            true,
-
-            NaN,
-            0,
-            42,
-            Infinity,
-
-            '',
-            ' ',
-            'text',
-
-            { toString() { return 'string' } },
-            { [Symbol.toPrimitive]() { return 'primitive' } },
-        ];
-
-        for (const v of values) {
-            expect(tag.render(v)).toEqual(`${ v }`);
-        }
-    });
-
-    it('requires a string-covnertible parameter by default', () => {
-        const tag = new StrOP('Methods');
-
-        expect(() => tag.render(Symbol('sym'))).toThrow();
+        expect(tag.resolve).toBeInstanceOf(Function);
     });
 
     it('uses the correct rule', () => {
@@ -322,7 +271,7 @@ describe('render', () => {
         }
 
         for (const v of values) {
-            expect(values[tag.render(v)]).toEqual(v);
+            expect(values[tag.resolve(v)]).toEqual(v);
         }
     });
 
@@ -332,7 +281,7 @@ describe('render', () => {
         tag.rule(42, 'something');
         tag.rule(42, 'something else');
 
-        expect(tag.render(42)).toEqual('something else');
+        expect(tag.resolve(42)).toEqual('something else');
     });
 
     it('uses the correct type', () => {
@@ -340,25 +289,33 @@ describe('render', () => {
 
         class Parent { }
 
+        const parent = new Parent;
+
+        expect(tag.resolve(parent)).toEqual(parent);
+
         tag.type(Parent, () => 'Parent');
 
-        expect(tag.render(new Parent)).toEqual('Parent');
+        expect(tag.resolve(parent)).toEqual('Parent');
 
         class Child extends Parent { }
 
-        expect(tag.render(new Child)).toEqual('Parent');
+        const child = new Child;
+
+        expect(tag.resolve(child)).toEqual('Parent');
 
         tag.type(Child, () => 'Child');
 
-        expect(tag.render(new Parent)).toEqual('Parent');
-        expect(tag.render(new Child)).toEqual('Child');
+        expect(tag.resolve(parent)).toEqual('Parent');
+        expect(tag.resolve(child)).toEqual('Child');
 
         class Other extends Parent { }
 
+        const other = new Other;
+
         tag.type(Other, () => 'Other');
 
-        expect(tag.render(new Child)).toEqual('Child');
-        expect(tag.render(new Other)).toEqual('Other');
+        expect(tag.resolve(child)).toEqual('Child');
+        expect(tag.resolve(other)).toEqual('Other');
     });
 
     it('overwrites existing rules', () => {
@@ -367,7 +324,7 @@ describe('render', () => {
         tag.type(Object, () => 'something');
         tag.type(Object, () => 'something else');
 
-        expect(tag.render(new Object)).toEqual('something else');
+        expect(tag.resolve(new Object)).toEqual('something else');
     });
 
     it('calls type handler with the instance', () => {
@@ -379,7 +336,7 @@ describe('render', () => {
 
         const instance = new Object;
 
-        tag.render(instance);
+        tag.resolve(instance);
 
         expect(handler).toHaveBeenCalledWith(instance);
     });
@@ -393,7 +350,7 @@ describe('render', () => {
             handler(this);
         });
 
-        tag.render(new Object);
+        tag.resolve(new Object);
 
         expect(handler).toHaveBeenCalledWith(tag);
     });
@@ -463,197 +420,23 @@ describe('unindent', () => {
             expect(tag.unindent(...tests.slice(0, i)).length).toEqual(i);
         }
     });
-});
 
-describe('unwrap', () => {
-    it('exists', () => {
-        const tag = new StrOP('Methods');
+    it('can disable indentation processing', () => {
+        const tag = new StrOP('Basic');
 
-        expect(tag.unwrap).toBeInstanceOf(Function);
-    });
+        tag.indent = '';
 
-    it('unwraps Boolean-like objects', () => {
-        const tag = new StrOP('Methods');
-
-        const f = new Boolean(false);
-        const t = new Boolean(true);
-
-        expect(tag.unwrap(f)).toEqual(false);
-        expect(tag.unwrap(t)).toEqual(true);
-
-        Object.setPrototypeOf(f, null);
-        Object.setPrototypeOf(t, null);
-
-        expect(tag.unwrap(f)).toEqual(false);
-        expect(tag.unwrap(t)).toEqual(true);
-
-        class Dummy {
-            toString() { return 'string' }
-
-            [Symbol.toPrimitive]() { return 'primitive' }
-        }
-
-        Object.setPrototypeOf(f, Dummy.prototype);
-        Object.setPrototypeOf(t, Dummy.prototype);
-
-        expect(tag.unwrap(f)).toEqual(false);
-        expect(tag.unwrap(t)).toEqual(true);
-    });
-
-    it('unwraps Date-like objects', () => {
-        const tag = new StrOP('Methods');
-
-        const s = '2020-05-22T17:04:29.569Z';
-        const d = new Date(s);
-
-        expect(tag.unwrap(d)).toEqual(new Date(s).toString());
-
-        Object.setPrototypeOf(d, null);
-
-        expect(tag.unwrap(d)).toEqual(new Date(s).toString());
-
-        class Dummy {
-            toString() { return 'string' }
-
-            [Symbol.toPrimitive]() { return 'primitive' }
-        }
-
-        Object.setPrototypeOf(d, Dummy.prototype);
-
-        expect(tag.unwrap(d)).toEqual(new Date(s).toString());
-    });
-
-    it('unwraps Number-like objects', () => {
-        const tag = new StrOP('Methods');
-
-        const nan = new Number(NaN);
-        const nil = new Number(0);
-        const two = new Number(2);
-        const inf = new Number(Infinity);
-
-        expect(tag.unwrap(nan)).toEqual(NaN);
-        expect(tag.unwrap(nil)).toEqual(0);
-        expect(tag.unwrap(two)).toEqual(2);
-        expect(tag.unwrap(inf)).toEqual(Infinity);
-
-        Object.setPrototypeOf(nan, null);
-        Object.setPrototypeOf(nil, null);
-        Object.setPrototypeOf(two, null);
-        Object.setPrototypeOf(inf, null);
-
-        expect(tag.unwrap(nan)).toEqual(NaN);
-        expect(tag.unwrap(nil)).toEqual(0);
-        expect(tag.unwrap(two)).toEqual(2);
-        expect(tag.unwrap(inf)).toEqual(Infinity);
-
-        class Dummy {
-            toString() { return 'string' }
-
-            [Symbol.toPrimitive]() { return 'primitive' }
-        }
-
-        Object.setPrototypeOf(nan, Dummy.prototype);
-        Object.setPrototypeOf(nil, Dummy.prototype);
-        Object.setPrototypeOf(two, Dummy.prototype);
-        Object.setPrototypeOf(inf, Dummy.prototype);
-
-        expect(tag.unwrap(nan)).toEqual(NaN);
-        expect(tag.unwrap(nil)).toEqual(0);
-        expect(tag.unwrap(two)).toEqual(2);
-        expect(tag.unwrap(inf)).toEqual(Infinity);
-    });
-
-    it('unwraps String-like objects', () => {
-        const tag = new StrOP('Methods');
-
-        const empty = new String('');
-        const blank = new String(' ');
-        const stuff = new String('text');
-
-        expect(tag.unwrap(empty)).toEqual('');
-        expect(tag.unwrap(blank)).toEqual(' ');
-        expect(tag.unwrap(stuff)).toEqual('text');
-
-        Object.setPrototypeOf(empty, null);
-        Object.setPrototypeOf(blank, null);
-        Object.setPrototypeOf(stuff, null);
-
-        expect(tag.unwrap(empty)).toEqual('');
-        expect(tag.unwrap(blank)).toEqual(' ');
-        expect(tag.unwrap(stuff)).toEqual('text');
-
-        class Dummy {
-            toString() { return 'string' }
-
-            [Symbol.toPrimitive]() { return 'primitive' }
-        }
-
-        Object.setPrototypeOf(empty, Dummy.prototype);
-        Object.setPrototypeOf(blank, Dummy.prototype);
-        Object.setPrototypeOf(stuff, Dummy.prototype);
-
-        expect(tag.unwrap(empty)).toEqual('');
-        expect(tag.unwrap(blank)).toEqual(' ');
-        expect(tag.unwrap(stuff)).toEqual('text');
-    });
-
-    it('returns primitives unchanged', () => {
-        const tag = new StrOP('Methods');
-
-        const values = [
-            undefined,
-            null,
-
-            false,
-            true,
-
-            NaN,
-            0,
-            42,
-            Infinity,
-
-            '',
-            ' ',
-            'text',
-        ];
-
-        for (const v of values) {
-            expect(tag.unwrap(v)).toEqual(v);
-        }
-    });
-
-    it('returns primitives unchanged', () => {
-        const tag = new StrOP('Methods');
-
-        expect(tag.unwrap({ toString: () => 'something' })).toEqual('something');
-    });
-
-    it('is called to unwrap passed objects when they are stringified', () => {
-        const tag = new StrOP('Methods');
-
-        const instance = new String('something');
-
-        tag.pass = () => instance;
-        tag.unwrap = import.meta.jest.fn();
-
-        const result = tag`literally ${ 'anything' }`;
-
-        expect(tag.unwrap).not.toHaveBeenCalled();
-
-        `${ result }`; // eslint-disable-line no-unused-expressions
-
-        expect(tag.unwrap).toHaveBeenCalledWith(result, expect.anything());
-    });
-
-    it('is not called if the passed object has [Symbol.toPrimitive] defined', () => {
-        const tag = new StrOP('Methods');
-
-        tag.pass = () => ({ [Symbol.toPrimitive]: () => 'something' });
-        tag.unwrap = import.meta.jest.fn();
-
-        const result = tag`literally ${ 'anything' }`;
-
-        expect(`${ result }`).toEqual('something');
-        expect(tag.unwrap).not.toHaveBeenCalled();
+        expect(tag.unindent()).toEqual([]);
+        expect(tag.unindent('text')).toEqual([ 'text' ]);
+        expect(tag.unindent('\ntext')).toEqual([ 'text' ]);
+        expect(tag.unindent(' \ntext')).toEqual([ ' \ntext' ]);
+        expect(tag.unindent('text\n')).toEqual([ 'text' ]);
+        expect(tag.unindent('text\n ')).toEqual([ 'text\n ' ]);
+        expect(tag.unindent('\nbefore', 'after')).toEqual([ 'before', 'after' ]);
+        expect(tag.unindent('\n before', 'after')).toEqual([ ' before', 'after' ]);
+        expect(tag.unindent('\nbefore', ' after')).toEqual([ 'before', ' after' ]);
+        expect(tag.unindent('\n before', ' after')).toEqual([ ' before', ' after' ]);
+        expect(tag.unindent('\n one', '\n two', '\n three\n')).toEqual([ ' one', '\n two', '\n three' ]);
+        expect(tag.unindent('\n one', '\n two', '\n three\n ')).toEqual([ ' one', '\n two', '\n three\n ' ]);
     });
 });
