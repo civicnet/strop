@@ -68,7 +68,8 @@ export default class StrOP extends Function {
 
     // https://github.com/civicnet/strop#pass-raw--values
     pass({ raw }, ...values) {
-        const indent = new RegExp(`^([${ this.indent }]*)`);
+        const escaped = this.indent.split('').map((c) => `\\${ c }`).join('');
+        const indent = new RegExp(`^([${ escaped }]*)`);
 
         values = values.map((v, i) => {
             const current = indent.exec(raw.slice(0, i + 1).join('').split('\n').pop())[1];
@@ -191,10 +192,12 @@ export default class StrOP extends Function {
             return strings;
         }
 
-        strings[0] = strings[0].replace(new RegExp(`^([${ this.indent }]*\n)+`), '\n');
+        const escaped = this.indent.split('').map((c) => `\\${ c }`).join('');
+
+        strings[0] = strings[0].replace(new RegExp(`^([${ escaped }]*\n)+`), '\n');
 
         strings[strings.length - 1] = strings[strings.length - 1].replace(
-            new RegExp(`(\n[${ this.indent }]*)+$`),
+            new RegExp(`(\n[${ escaped }]*)+$`),
             '\n',
         );
 
@@ -226,7 +229,7 @@ export default class StrOP extends Function {
             }
         }
 
-        indent = new RegExp(`^${ indent.join('') }(.*)$`);
+        indent = indent.join('');
 
         flat.push(null);
 
@@ -248,7 +251,13 @@ export default class StrOP extends Function {
                 continue;
             }
 
-            current.push((indent.exec(flat[i]) || [ null, flat[i] ])[1]);
+            if (flat[i].startsWith(indent)) {
+                current.push(flat[i].slice(indent.length));
+
+                continue;
+            }
+
+            current.push(flat[i]);
         }
 
         result = result.map((r) => r.join('\n'));

@@ -4,45 +4,63 @@ import StrOP from '..';
 
 
 describe('tag', () => {
-    it('does not handle \\ correctly', () => {
+    it('handles \\ correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '\t \\';
 
-        expect(() => tag``).toThrow(SyntaxError);
+        const result = tag`
+            \\ wrong
+        `;
+
+        const output = 'wrong';
+
+        expect(`${ result }`).toEqual(output);
     });
 
-    it('does not handle ( correctly', () => {
+    it('handles ( correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '\t (';
 
-        expect(() => tag`
+        const result = tag`
             ( wrong
-        `).toThrow(SyntaxError);
+        `;
+
+        const output = 'wrong';
+
+        expect(`${ result }`).toEqual(output);
     });
 
-    it('does not handle ) correctly', () => {
+    it('handles ) correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '\t )';
 
-        expect(() => tag`
+        const result = tag`
             ) wrong
-        `).toThrow(SyntaxError);
+        `;
+
+        const output = 'wrong';
+
+        expect(`${ result }`).toEqual(output);
     });
 
-    it('does not handle [ correctly', () => {
+    it('handles [ correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '\t [';
 
-        expect(() => tag`
+        const result = tag`
             [ wrong
-        `).toThrow(SyntaxError);
+        `;
+
+        const output = 'wrong';
+
+        expect(`${ result }`).toEqual(output);
     });
 
-    it('does not handle ] correctly', () => {
+    it('handles ] correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '\t ]';
@@ -53,10 +71,10 @@ describe('tag', () => {
 
         const output = 'wrong';
 
-        expect(`${ result }`).not.toEqual(output);
+        expect(`${ result }`).toEqual(output);
     });
 
-    it('does not handle | correctly', () => {
+    it('handles | correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '\t |';
@@ -67,10 +85,10 @@ describe('tag', () => {
 
         const output = 'wrong';
 
-        expect(`${ result }`).not.toEqual(output);
+        expect(`${ result }`).toEqual(output);
     });
 
-    it('does not handle ^ correctly', () => {
+    it('handles ^ correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '^\t ';
@@ -81,10 +99,10 @@ describe('tag', () => {
 
         const output = 'wrong';
 
-        expect(`${ result }`).not.toEqual(output);
+        expect(`${ result }`).toEqual(output);
     });
 
-    it('does not handle $ correctly', () => {
+    it('handles $ correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '\t $';
@@ -95,10 +113,10 @@ describe('tag', () => {
 
         const output = 'wrong';
 
-        expect(`${ result }`).not.toEqual(output);
+        expect(`${ result }`).toEqual(output);
     });
 
-    it('does not handle ? correctly', () => {
+    it('handles ? correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '\t ?';
@@ -109,16 +127,16 @@ describe('tag', () => {
 
         const output = 'wrong';
 
-        expect(`${ result }`).not.toEqual(output);
+        expect(`${ result }`).toEqual(output);
 
         tag.indent = '\t ?';
 
         expect(() => tag`
             ??? wrong
-        `).toThrow(SyntaxError);
+        `).not.toThrow();
     });
 
-    it('does not handle * correctly', () => {
+    it('handles * correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '\t *';
@@ -129,16 +147,16 @@ describe('tag', () => {
 
         const output = 'wrong';
 
-        expect(`${ result }`).not.toEqual(output);
+        expect(`${ result }`).toEqual(output);
 
         tag.indent = '\t *';
 
         expect(() => tag`
             ** wrong
-        `).toThrow(SyntaxError);
+        `).not.toThrow();
     });
 
-    it('does not handle + correctly', () => {
+    it('handles + correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '\t +';
@@ -149,16 +167,16 @@ describe('tag', () => {
 
         const output = 'wrong';
 
-        expect(`${ result }`).not.toEqual(output);
+        expect(`${ result }`).toEqual(output);
 
         tag.indent = '\t +';
 
         expect(() => tag`
             ++ wrong
-        `).toThrow(SyntaxError);
+        `).not.toThrow();
     });
 
-    it('does not handle - correctly', () => {
+    it('handles - correctly', () => {
         const tag = new StrOP('Bugs');
 
         tag.indent = '\t A-Z';
@@ -168,6 +186,6 @@ describe('tag', () => {
 
         const output = 'WRONG';
 
-        expect(`${ result }`).not.toEqual(output);
+        expect(`${ result }`).toEqual(output);
     });
 });

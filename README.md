@@ -222,7 +222,7 @@ The result of the (final) function call _should not_ be altered, as it is assume
 
 This method is called to prepare the result of a tag operation, after indendation is removed from the `raw` strings by the [**`unindent`** method][unindent], and with the original `values`. It is used by template literals and the default [**`file`** method][file]'s returned functions.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L70-L122) returns an object which wraps the parameters. The returned object is an instance of the tag and cannot be modified, but can be extended. When converted to a string, it calls the [**`resolve`** method][resolve] for every interpolated value and converts the results into strings; indentation is adjusted for the results that span multiple lines.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L70-L123) returns an object which wraps the parameters. The returned object is an instance of the tag and cannot be modified, but can be extended. When converted to a string, it calls the [**`resolve`** method][resolve] for every interpolated value and converts the results into strings; indentation is adjusted for the results that span multiple lines.
 
 Custom implementations could be used to:
 * freeze the arguments;
@@ -236,7 +236,7 @@ Custom implementations should (but are not required to) call the default impleme
 
 This method is invoked by objects returned by the default [**`pass`** method][pass] when they are converted to strings to process every interpolated `value`.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L125-L144) searches [rules and types] for a potential substitution.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L126-L145) searches [rules and types] for a potential substitution.
 
 Custom implementations could be used to:
 * freeze the input value;
@@ -253,7 +253,7 @@ The returned value is always converted to a string by objects returned by the de
 
 This method is not called internally.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L147-L164) enables the default [**`resolve`** method][resolve] to replace every interpolated `value` with `as`.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L148-L165) enables the default [**`resolve`** method][resolve] to replace every interpolated `value` with `as`.
 
 There are no discernible use cases that would require overriding this method.
 
@@ -264,7 +264,7 @@ Custom implementations must call the original implementation to register effecti
 
 This method is not called internally.
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L167-L177) enables the default [**`resolve`** method][resolve] to replace every interpolated value that is an instance of the `factory` function by calling the `handler` function with `this` set to the calling tag and the value as an argument.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L168-L178) enables the default [**`resolve`** method][resolve] to replace every interpolated value that is an instance of the `factory` function by calling the `handler` function with `this` set to the calling tag and the value as an argument.
 
 Every interpolated value's entire prototype (inheritance) chain is searched; if the value matches multiple registered types, only the most specialized one's handler will be called.
 
@@ -277,7 +277,7 @@ Custom implementations must call the original implementation to register effecti
 
 This method is called during interpolation with the template's raw `strings`; the returned value is provided to the [**`pass`** method][pass].
 
-The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L180-L253) trims leading and/or trailing lines that are empty (or contain only indentation characters) and removes any common indentation from all remaining non-empty lines.
+The [default implementation](https://github.com/civicnet/strop/blob/master/index.js#L181-L269) trims leading and/or trailing lines that are empty (or contain only indentation characters) and removes any common indentation from all remaining non-empty lines.
 
 Templates that span a single line before trimming do not have their indentation adjusted.
 
