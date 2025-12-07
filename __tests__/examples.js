@@ -3,7 +3,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable sort-keys */
 
-const StrOP = require('..');
+import StrOP from '..';
 
 const sample = new StrOP('Sample');
 

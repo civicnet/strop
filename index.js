@@ -1,5 +1,8 @@
 'use strict';
 
+import { readFileSync } from 'node:fs';
+import types from 'node:util/types';
+
 const $Rule = Symbol('Rule');
 const $Type = Symbol('Type');
 
@@ -13,7 +16,7 @@ function transform(strings, ...values) {
     return Object.freeze(result);
 }
 
-class StrOP extends Function {
+export default class StrOP extends Function {
     // https://github.com/civicnet/strop#constructing-tags
     constructor(name) {
         if (typeof name == 'undefined') {
@@ -76,7 +79,7 @@ class StrOP extends Function {
             throw new TypeError('A file path must be specified');
         }
 
-        const raw = require('fs').readFileSync(path, 'utf8');
+        const raw = readFileSync(path, 'utf8');
 
         const body = [
             'const values = Object.assign({}, ...Array.prototype.slice.call(arguments).reverse());',
@@ -259,7 +262,7 @@ class StrOP extends Function {
         };
 
         for (const [ test, cast ] of Object.entries(known)) {
-            if (require('util').types[test](value)) {
+            if (types[test](value)) {
                 return cast.call(value, hint);
             }
         }
@@ -271,5 +274,3 @@ class StrOP extends Function {
         return value;
     }
 }
-
-module.exports = StrOP;

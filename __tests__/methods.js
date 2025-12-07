@@ -1,9 +1,12 @@
 'use strict';
 
-const StrOP = require('..');
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import StrOP from '..';
+
 
 describe('file', () => {
-    const example = (file) => require('path').join(__dirname, '..', 'examples', file);
+    const example = (file) => join(import.meta.dirname, '..', 'examples', file);
 
     it('exists', () => {
         const tag = new StrOP('Methods');
@@ -42,7 +45,7 @@ describe('file', () => {
 
         const greeting = tag.file(example('greeting.in'));
         const person = { name: 'Alice', job: 'programmer', options: [ 'yes', 'no' ] }; // eslint-disable-line sort-keys
-        const output = require('fs').readFileSync(example('greeting.out'), 'utf8');
+        const output = readFileSync(example('greeting.out'), 'utf8');
 
         expect(`${ greeting(person) }`).toEqual(output);
     });
@@ -53,7 +56,7 @@ describe('file', () => {
         const greeting = tag.file(example('greeting.in'));
         const person = { name: 'Alice' };
         const other = { name: 'Bob', job: 'programmer', options: [ 'yes', 'no' ] }; // eslint-disable-line sort-keys
-        const output = require('fs').readFileSync(example('greeting.out'), 'utf8');
+        const output = readFileSync(example('greeting.out'), 'utf8');
 
         expect(`${ greeting(person, other) }`).toEqual(output);
     });
@@ -64,7 +67,7 @@ describe('file', () => {
         const greeting = tag.file(example('greeting.in'));
         const person = { get name() { return 'Alice' } }; // eslint-disable-line @stylistic/max-statements-per-line
         const other = { name: 'Bob', job: 'programmer', options: [ 'yes', 'no' ] }; // eslint-disable-line sort-keys
-        const output = require('fs').readFileSync(example('greeting.out'), 'utf8');
+        const output = readFileSync(example('greeting.out'), 'utf8');
 
         expect(`${ greeting(person, other) }`).toEqual(output);
     });
@@ -72,7 +75,7 @@ describe('file', () => {
     it('calls shadowed getters', () => {
         const tag = new StrOP('Methods');
 
-        const check = jest.fn();
+        const check = import.meta.jest.fn();
 
         const greeting = tag.file(example('greeting.in'));
         const person = { name: 'Alice', job: 'programmer', options: [ 'yes', 'no' ] }; // eslint-disable-line sort-keys
@@ -86,7 +89,7 @@ describe('file', () => {
     it('calls unrelated getters', () => {
         const tag = new StrOP('Methods');
 
-        const check = jest.fn();
+        const check = import.meta.jest.fn();
 
         const greeting = tag.file(example('greeting.in'));
         const person = { name: 'Alice', job: 'programmer', options: [ 'yes', 'no' ] }; // eslint-disable-line sort-keys
@@ -103,7 +106,7 @@ describe('file', () => {
         tag.indent = '\t >';
 
         const todo = tag.file(example('todo.in'));
-        const output = require('fs').readFileSync(example('todo.out'), 'utf8');
+        const output = readFileSync(example('todo.out'), 'utf8');
 
         expect(`${ todo() }`).toEqual(output);
     });
@@ -125,7 +128,7 @@ describe('pass', () => {
     it('is called when tagging', () => {
         const tag = new StrOP('Methods');
 
-        tag.pass = jest.fn();
+        tag.pass = import.meta.jest.fn();
 
         tag``; // eslint-disable-line no-unused-expressions
 
@@ -166,7 +169,7 @@ describe('pass', () => {
     it('has toString called on its result when stringifying', () => {
         const tag = new StrOP('Methods');
 
-        const instance = { [Symbol.toPrimitive]: jest.fn(() => 'something') };
+        const instance = { [Symbol.toPrimitive]: import.meta.jest.fn(() => 'something') };
 
         tag.pass = () => instance;
 
@@ -370,7 +373,7 @@ describe('render', () => {
     it('calls type handler with the instance', () => {
         const tag = new StrOP('Methods');
 
-        const handler = jest.fn();
+        const handler = import.meta.jest.fn();
 
         tag.type(Object, handler);
 
@@ -384,7 +387,7 @@ describe('render', () => {
     it('calls type handler within the context of the StrOP instance', () => {
         const tag = new StrOP('Methods');
 
-        const handler = jest.fn();
+        const handler = import.meta.jest.fn();
 
         tag.type(Object, function check() {
             handler(this);
@@ -631,7 +634,7 @@ describe('unwrap', () => {
         const instance = new String('something');
 
         tag.pass = () => instance;
-        tag.unwrap = jest.fn();
+        tag.unwrap = import.meta.jest.fn();
 
         const result = tag`literally ${ 'anything' }`;
 
@@ -646,7 +649,7 @@ describe('unwrap', () => {
         const tag = new StrOP('Methods');
 
         tag.pass = () => ({ [Symbol.toPrimitive]: () => 'something' });
-        tag.unwrap = jest.fn();
+        tag.unwrap = import.meta.jest.fn();
 
         const result = tag`literally ${ 'anything' }`;
 

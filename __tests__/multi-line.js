@@ -1,6 +1,6 @@
 'use strict';
 
-const StrOP = require('..');
+import StrOP from '..';
 
 const tag = new StrOP('Multi-line');
 
